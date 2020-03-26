@@ -2,6 +2,7 @@ package com.markoid.bluetoothmanager
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.markoid.bluetooth.manager.BluetoothManager
 
 class MainActivity : AppCompatActivity() {
 
