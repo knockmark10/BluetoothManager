@@ -4,10 +4,12 @@ import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.markoid.bluetooth.callbkacks.BluetoothManagerCallback
 import com.markoid.bluetooth.manager.BluetoothManager
+import com.markoid.bluetooth.states.ServiceState
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
@@ -91,4 +93,8 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
         this.devices_found_loading.visibility = visibility
     }
 
+    override fun onServiceStateChanged(state: ServiceState) {
+        val message = "Your device is now ${state.name.toLowerCase()}"
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
 }
