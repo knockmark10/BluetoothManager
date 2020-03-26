@@ -34,9 +34,9 @@ private constructor(
         const val REQUEST_ENABLE_BT = 1203
     }
 
-    private var SCAN_TIME = 120L //120 seconds (2 minutes)
+    private var mScanTime = 120L
 
-    private var DISCOVERABLE_TIME = 300L //300 seconds (5 minutes)
+    private var mDiscoverableTime = 120L
 
     private var mNotifyScanModeChange = false
 
@@ -75,10 +75,10 @@ private constructor(
      */
     fun makeDeviceVisibleForOtherDevices() {
         val discoverableIntent = Intent(ACTION_REQUEST_DISCOVERABLE).apply {
-            putExtra(EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_TIME)
+            putExtra(EXTRA_DISCOVERABLE_DURATION, mDiscoverableTime)
         }
         this.mActivity.startActivity(discoverableIntent)
-        this.scheduleTask(DISCOVERABLE_TIME, TimeUnit.SECONDS, ScheduleState.DISCOVERY) {
+        this.scheduleTask(mDiscoverableTime, TimeUnit.SECONDS, ScheduleState.DISCOVERY) {
             if (this.mLoopDiscovery) makeDeviceVisibleForOtherDevices()
         }
     }
@@ -100,13 +100,14 @@ private constructor(
     fun scanDevices() {
         if (this.isScanReady) {
             this.mNewDevicesList.clear()
-            val newDeviceFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+            val newDeviceFilter = IntentFilter()
+            newDeviceFilter.addAction(BluetoothDevice.ACTION_FOUND)
+            newDeviceFilter.addAction(ACTION_DISCOVERY_FINISHED)
             this.mDeviceFoundBroadcastReceiver.registerReceiver(this.mActivity, newDeviceFilter)
             this.mBluetoothAdapter?.startDiscovery()
             showLoading(true)
-            this.scheduleTask(this.SCAN_TIME, TimeUnit.SECONDS, ScheduleState.SCAN) {
+            this.scheduleTask(this.mScanTime, TimeUnit.SECONDS, ScheduleState.SCAN) {
                 cancelDiscovery()
-                if (this.mLoopScan) scanDevices()
             }
         }
     }
@@ -195,8 +196,7 @@ private constructor(
      * Cancels bluetooth's discovery operation
      */
     private fun cancelDiscovery() {
-        val isDiscovering = this.mBluetoothAdapter?.isDiscovering ?: false
-        if (checkBluetoothCompatibility() && isDiscovering) this.mBluetoothAdapter?.cancelDiscovery()
+        if (checkBluetoothCompatibility()) this.mBluetoothAdapter?.cancelDiscovery()
     }
 
     /**
@@ -261,7 +261,9 @@ private constructor(
 
         private var loopScan = false
 
-        private var discoverableTime = 300L
+        private var scanTime = 120L
+
+        private var discoverableTime = 120L
 
         private var loopDiscovery = false
 
@@ -274,13 +276,22 @@ private constructor(
             return this
         }
 
-        fun useScanLooper(useLooper: Boolean): Builder {
+        /**
+         * Set time for scanning operation, while setting its maximum time to 5 minutes
+         */
+        fun setScanTime(seconds: Long, useLooper: Boolean): Builder {
+            val fixedTime = if (seconds > 300L) 300L else seconds
+            this.scanTime = fixedTime
             this.loopScan = useLooper
             return this
         }
 
+        /**
+         * Set time for scanning operation, while setting its maximum time to 2 minutes
+         */
         fun setDiscoverableTime(seconds: Long, useLooper: Boolean): Builder {
-            this.discoverableTime = seconds
+            val fixedTime = if(seconds > 120) 120 else seconds
+            this.discoverableTime = fixedTime
             this.loopDiscovery = useLooper
             return this
         }
@@ -292,10 +303,11 @@ private constructor(
 
         fun build(activity: Activity) = BluetoothManager(activity).apply {
             this.mLoopScan = loopScan
-            this.DISCOVERABLE_TIME = discoverableTime
+            this.mDiscoverableTime = discoverableTime
             this.mLoopDiscovery = loopDiscovery
             this.mListener = listener
             this.mNotifyScanModeChange = notifyScanModeChange
+            this.mScanTime = scanTime
         }
     }
 
@@ -309,8 +321,9 @@ private constructor(
         setupBluetoothConfigurations()
     }
 
-    override fun onShowLoading(boolean: Boolean) {
-        showLoading(boolean)
+    override fun onScanOperationFinished() {
+        showLoading(false)
+        if (this.mLoopScan) scanDevices()
     }
 
     override fun onNewDeviceFound(device: BluetoothDevice) {

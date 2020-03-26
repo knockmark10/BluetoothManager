@@ -21,10 +21,9 @@ class DeviceFoundBroadcastReceiver : BroadcastReceiver() {
                 intent?.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                     ?.let { device -> this.mListener?.onNewDeviceFound(device) }
             }
-            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> this.mListener?.onShowLoading(false)
+            BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> this.mListener?.onScanOperationFinished()
         }
     }
-
 
     fun registerReceiver(activity: Activity, filter: IntentFilter): Intent? = try {
         if (!this.isRegistered) activity.registerReceiver(this, filter) else null

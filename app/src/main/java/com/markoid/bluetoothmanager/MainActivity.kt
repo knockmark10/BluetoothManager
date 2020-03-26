@@ -15,8 +15,8 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
         BluetoothManager.Builder
             .notifyScanModeChange(true)
             .setBluetoothListener(this)
-            .setDiscoverableTime(120L, true)
-            .useScanLooper(true)
+            .setDiscoverableTime(120L, false)
+            .setScanTime(10L, false)
             .build(this)
     }
 
