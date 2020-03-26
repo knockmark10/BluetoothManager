@@ -58,18 +58,12 @@ class BluetoothService(
         private val MY_UUID =
             UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66")
 
-        // Constants that indicate the current connection state
-        const val STATE_NONE = 0 // we're doing nothing
-        const val STATE_LISTEN = 1 // now listening for incoming connections
-        const val STATE_CONNECTING = 2 // now initiating an outgoing connection
-        const val STATE_CONNECTED = 3 // now connected to a remote device
     }
 
     /**
      * Constructor. Prepares a new BluetoothChat session.
      *
      * @param context The UI Activity Context
-     * @param handler A Handler to send messages back to the UI Activity
      */
     init {
         mState = ServiceState.NONE
@@ -354,7 +348,6 @@ class BluetoothService(
 
         override fun run() {
             val buffer = ByteArray(1024)
-            var bytes: Int
             // Keep listening to the InputStream while connected
             while (true) {
                 try {
