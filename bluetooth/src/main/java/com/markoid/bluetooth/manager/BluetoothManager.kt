@@ -38,8 +38,6 @@ private constructor(
 
     private var mDiscoverableTime = 120L
 
-    private var mNotifyScanModeChange = false
-
     private var mLoopScan = false
 
     private var mLoopDiscovery = false
@@ -60,15 +58,15 @@ private constructor(
 
     private val mPermissionManager by lazy { PermissionManager(this.mActivity, this) }
 
-    private val mBluetoothAdapter: BluetoothAdapter? by lazy { getDefaultAdapter() }
+    private val mBluetoothAdapter: BluetoothAdapter by lazy { getDefaultAdapter() }
 
     private val mBluetoothService by lazy { BluetoothService(this.mBluetoothAdapter) }
 
-    init {
-        setup()
-    }
-
     // <-----------------------------PUBLIC METHODS ----------------------------------------------->
+
+    init {
+        setupBluetoothConfigurations()
+    }
 
     /**
      * Make device visible for some time.
@@ -81,6 +79,11 @@ private constructor(
         this.scheduleTask(mDiscoverableTime, TimeUnit.SECONDS, ScheduleState.DISCOVERY) {
             if (this.mLoopDiscovery) makeDeviceVisibleForOtherDevices()
         }
+    }
+
+    fun setBluetoothListener(listener: BluetoothManagerCallback): BluetoothManager {
+        this.mListener = listener
+        return this
     }
 
     /**
@@ -104,7 +107,7 @@ private constructor(
             newDeviceFilter.addAction(BluetoothDevice.ACTION_FOUND)
             newDeviceFilter.addAction(ACTION_DISCOVERY_FINISHED)
             this.mDeviceFoundBroadcastReceiver.registerReceiver(this.mActivity, newDeviceFilter)
-            this.mBluetoothAdapter?.startDiscovery()
+            this.mBluetoothAdapter.startDiscovery()
             showLoading(true)
             this.scheduleTask(this.mScanTime, TimeUnit.SECONDS, ScheduleState.SCAN) {
                 cancelDiscovery()
@@ -113,11 +116,17 @@ private constructor(
     }
 
     /**
+     * Stops scanning operation
+     */
+    fun stopScan() {
+        this.cancelDiscovery()
+    }
+
+    /**
      * Retrieve a list of synchronized devices.
      */
     fun getSynchronizedDevices(): List<BluetoothDevice> {
-        checkBluetoothCompatibility()
-        return (this.mBluetoothAdapter?.bondedDevices ?: emptySet()).toList()
+        return (this.mBluetoothAdapter.bondedDevices ?: emptySet()).toList()
     }
 
     fun connectDevice(device: BluetoothDevice) {
@@ -132,28 +141,29 @@ private constructor(
         this.mBluetoothService.write(send)
     }
 
-    // <-----------------------------INTERNAL CALLS ----------------------------------------------->
-    /**
-     * Set up basic configuration, such as bluetooth availability, enablement, location
-     * permissions and other necessary configurations.
-     */
-    private fun setup() {
+    fun requestLocationPermission(): BluetoothManager {
         if (!this.mPermissionManager.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             this.mPermissionManager.requestSinglePermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        } else {
-            setupBluetoothConfigurations()
         }
+        return this
     }
 
-    private fun setupBluetoothConfigurations() {
-        if (checkBluetoothCompatibility()) {
-            startBluetoothService()
-            checkBluetoothEnablement()
-            setupNewDevicesList()
-            setupConnectState()
-            setReadMessageListener()
-            setBroadcastListener()
+
+    fun requestBluetoothEnabling(): BluetoothManager {
+        if (!this.mBluetoothAdapter.isEnabled) {
+            showBluetoothEnableDialog()
+        } else {
+            this.mListener?.onBluetoothAvailable()
         }
+        return this
+    }
+
+    // <-----------------------------INTERNAL CALLS ----------------------------------------------->
+    private fun setupBluetoothConfigurations() {
+        checkBluetoothEnablement()
+        setupNewDevicesList()
+        setBroadcastListener()
+        startBluetoothService()
     }
 
     private fun setupConnectState() {
@@ -185,7 +195,7 @@ private constructor(
      * Checks if bluetooth is enabled
      */
     private fun checkBluetoothEnablement() {
-        if (this.mBluetoothAdapter?.isEnabled == false) {
+        if (!this.mBluetoothAdapter.isEnabled) {
             showBluetoothEnableDialog()
         } else {
             this.mListener?.onBluetoothAvailable()
@@ -196,7 +206,16 @@ private constructor(
      * Cancels bluetooth's discovery operation
      */
     private fun cancelDiscovery() {
-        if (checkBluetoothCompatibility()) this.mBluetoothAdapter?.cancelDiscovery()
+        this.mBluetoothAdapter.cancelDiscovery()
+    }
+
+    /**
+     * Sets up everything for starting
+     */
+    private fun startBluetoothService() {
+        this.mBluetoothService.start()
+        setupConnectState()
+        setReadMessageListener()
     }
 
     /**
@@ -205,17 +224,6 @@ private constructor(
     private fun showBluetoothEnableDialog() {
         val enableIntent = Intent(ACTION_REQUEST_ENABLE)
         this.mActivity.startActivityForResult(enableIntent, REQUEST_ENABLE_BT)
-    }
-
-    private fun startBluetoothService() {
-        this.mBluetoothService.start()
-    }
-
-    private fun checkBluetoothCompatibility(): Boolean = if (this.mBluetoothAdapter == null) {
-        this.mListener?.onBluetoothNotCompatible()
-        false
-    } else {
-        true
     }
 
     private fun scheduleTask(
@@ -267,14 +275,7 @@ private constructor(
 
         private var loopDiscovery = false
 
-        private var notifyScanModeChange = false
-
         private var listener: BluetoothManagerCallback? = null
-
-        fun notifyScanModeChange(notify: Boolean): Builder {
-            this.notifyScanModeChange = notify
-            return this
-        }
 
         /**
          * Set time for scanning operation, while setting its maximum time to 5 minutes
@@ -290,25 +291,24 @@ private constructor(
          * Set time for scanning operation, while setting its maximum time to 2 minutes
          */
         fun setDiscoverableTime(seconds: Long, useLooper: Boolean): Builder {
-            val fixedTime = if(seconds > 120) 120 else seconds
+            val fixedTime = if (seconds > 120) 120 else seconds
             this.discoverableTime = fixedTime
             this.loopDiscovery = useLooper
             return this
         }
 
-        fun setBluetoothListener(listener: BluetoothManagerCallback): Builder {
-            this.listener = listener
-            return this
-        }
-
-        fun build(activity: Activity) = BluetoothManager(activity).apply {
-            this.mLoopScan = loopScan
-            this.mDiscoverableTime = discoverableTime
-            this.mLoopDiscovery = loopDiscovery
-            this.mListener = listener
-            this.mNotifyScanModeChange = notifyScanModeChange
-            this.mScanTime = scanTime
-        }
+        /**
+         * Returns an instance of BluetoothManager
+         * If device doesn't support bluetooth, null object will be returned
+         */
+        fun build(activity: Activity): BluetoothManager? =
+            if (getDefaultAdapter() == null) null else BluetoothManager(activity).apply {
+                this.mLoopScan = loopScan
+                this.mDiscoverableTime = discoverableTime
+                this.mLoopDiscovery = loopDiscovery
+                this.mListener = listener
+                this.mScanTime = scanTime
+            }
     }
 
     // <------------------------------OVERRIDES --------------------------------------------------->

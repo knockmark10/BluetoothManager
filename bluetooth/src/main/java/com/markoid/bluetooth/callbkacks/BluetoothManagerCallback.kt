@@ -5,7 +5,6 @@ import com.markoid.bluetooth.states.ServiceState
 
 interface BluetoothManagerCallback {
     fun onNewDeviceFound(devices: List<BluetoothDevice>)
-    fun onBluetoothNotCompatible()
     fun onBluetoothAvailable()
     fun onScanProgressVisibility(visibility: Int) {}
     fun onServiceStateChanged(state: ServiceState) {}

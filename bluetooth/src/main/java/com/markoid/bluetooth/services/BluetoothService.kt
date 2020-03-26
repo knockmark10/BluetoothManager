@@ -20,7 +20,7 @@ import java.util.*
  * thread for performing data transmissions when connected.
  */
 class BluetoothService(
-    private val mBluetoothAdapter: BluetoothAdapter?,
+    private val mBluetoothAdapter: BluetoothAdapter,
     private val handler: Handler = Handler()
 ) {
 
@@ -221,7 +221,7 @@ class BluetoothService(
             var tmp: BluetoothServerSocket? = null
             // Create a new listening server socket
             try {
-                tmp = mBluetoothAdapter?.listenUsingRfcommWithServiceRecord(NAME, MY_UUID)
+                tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(NAME, MY_UUID)
             } catch (e: IOException) {
             }
             mmServerSocket = tmp
@@ -292,7 +292,7 @@ class BluetoothService(
         override fun run() {
             name = "ConnectThread"
             // Always cancel discovery because it will slow down a connection
-            mBluetoothAdapter?.cancelDiscovery()
+            mBluetoothAdapter.cancelDiscovery()
             // Make a connection to the BluetoothSocket
             try {
                 // This is a blocking call and will only return on a

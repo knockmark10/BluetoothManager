@@ -1,6 +1,7 @@
 package com.markoid.bluetoothmanager
 
 import android.bluetooth.BluetoothDevice
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -13,11 +14,12 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
 
     private val bluetoothManager by lazy {
         BluetoothManager.Builder
-            .notifyScanModeChange(true)
-            .setBluetoothListener(this)
             .setDiscoverableTime(120L, false)
             .setScanTime(10L, false)
             .build(this)
+            ?.requestLocationPermission()
+            ?.requestBluetoothEnabling()
+            ?.setBluetoothListener(this)
     }
 
     private val attachedDevicesAdapter by lazy { DevicesAdapter() }
@@ -36,8 +38,15 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
         setClickListener()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == BluetoothManager.REQUEST_ENABLE_BT) {
+            setupAttachedDevicesList()
+        }
+    }
+
     private fun setupAttachedDevicesList() {
-        val devices = bluetoothManager.getSynchronizedDevices()
+        val devices = bluetoothManager?.getSynchronizedDevices() ?: emptyList()
         val visibility = if (devices.isEmpty()) View.GONE else View.VISIBLE
         this.devices_attached_title.visibility = visibility
         this.devices_attached_list.visibility = visibility
@@ -46,23 +55,23 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
             LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         this.devices_attached_list.adapter = attachedDevicesAdapter
         this.attachedDevicesAdapter.setData(devices)
-        this.attachedDevicesAdapter.setClickListener { this.bluetoothManager.connectDevice(it) }
+        this.attachedDevicesAdapter.setClickListener { this.bluetoothManager?.connectDevice(it) }
     }
 
     private fun setupNewFoundDevicesList() {
         this.devices_found_list.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         this.devices_found_list.adapter = newFoundDevicesAdapter
-        this.newFoundDevicesAdapter.setClickListener { this.bluetoothManager.connectDevice(it) }
+        this.newFoundDevicesAdapter.setClickListener { this.bluetoothManager?.connectDevice(it) }
     }
 
     private fun setClickListener() {
         this.devices_scan.setOnClickListener {
-            this.bluetoothManager.scanDevices()
+            this.bluetoothManager?.scanDevices()
         }
 
         this.devices_make_discoverable.setOnClickListener {
-            this.bluetoothManager.makeDeviceVisibleForOtherDevices()
+            this.bluetoothManager?.makeDeviceVisibleForOtherDevices()
         }
     }
 
@@ -72,9 +81,6 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
         this.devices_found_loading.visibility = visibility
         this.devices_found_list.visibility = visibility
         this.newFoundDevicesAdapter.setData(devices)
-    }
-
-    override fun onBluetoothNotCompatible() {
     }
 
     override fun onBluetoothAvailable() {
