@@ -4,15 +4,79 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_margin="16dp"
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/devices_attached_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        android:text="Previosly attached deviced:"
+        android:textColor="@color/colorPrimary"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/devices_attached_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/devices_attached_title"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_devices" />
+
+    <TextView
+        android:id="@+id/devices_found_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Devices found:"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/devices_attached_list" />
+
+    <ProgressBar
+        android:id="@+id/devices_found_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:padding="2dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/devices_found_title"
+        app:layout_constraintStart_toEndOf="@+id/devices_found_title"
+        app:layout_constraintTop_toTopOf="@+id/devices_found_title" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/devices_found_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/devices_found_title"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_devices" />
+
+    <Button
+        android:id="@+id/devices_scan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="scan"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/devices_make_discoverable"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/devices_make_discoverable"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="make discoverable"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/devices_scan" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

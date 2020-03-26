@@ -95,9 +95,11 @@ private constructor(
 
     /**
      * Perform discovery operation, is scan is available and every set up is ready.
+     * Is can be scheduled to perform active scanning infinitely
      */
     fun scanDevices() {
         if (this.isScanReady) {
+            this.mNewDevicesList.clear()
             val newDeviceFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
             this.mDeviceFoundBroadcastReceiver.registerReceiver(this.mActivity, newDeviceFilter)
             this.mBluetoothAdapter?.startDiscovery()
