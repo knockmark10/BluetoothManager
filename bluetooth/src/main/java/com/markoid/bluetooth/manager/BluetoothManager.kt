@@ -314,10 +314,11 @@ private constructor(
     // <------------------------------OVERRIDES --------------------------------------------------->
 
     override fun onPermissionDenied(permission: String) {
-        this.mListener?.onBluetoothAvailable()
+        this.mListener?.onLocationPermissionRejected()
     }
 
     override fun onPermissionGranted(permissions: String) {
+        this.mListener?.onLocationPermissionAccepted()
         setupBluetoothConfigurations()
     }
 
