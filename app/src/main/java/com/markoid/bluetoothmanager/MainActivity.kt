@@ -3,6 +3,7 @@ package com.markoid.bluetoothmanager
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +18,7 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
     private val bluetoothManager by lazy {
         BluetoothManager.Builder
             .setDiscoverableTime(120L, false)
-            .setScanTime(10L, false)
+            .setScanTime(5L, true)
             .build(this)
             ?.requestLocationPermission()
             ?.requestBluetoothEnabling()
@@ -96,5 +97,9 @@ class MainActivity : AppCompatActivity(), BluetoothManagerCallback {
     override fun onServiceStateChanged(state: ServiceState) {
         val message = "Your device is now ${state.name.toLowerCase()}"
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onScanFinished() {
+        Log.d("OnScanFinished", "Finished")
     }
 }

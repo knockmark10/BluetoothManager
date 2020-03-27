@@ -212,7 +212,6 @@ private constructor(
      */
     private fun cancelDiscovery() {
         this.mBluetoothAdapter.cancelDiscovery()
-        this.mListener?.onScanFinished()
     }
 
     /**
@@ -329,6 +328,7 @@ private constructor(
     }
 
     override fun onScanOperationFinished() {
+        this.mListener?.onScanFinished()
         showLoading(false)
         if (this.mLoopScan) scanDevices()
     }
