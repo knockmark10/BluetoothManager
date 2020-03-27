@@ -148,7 +148,6 @@ private constructor(
         return this
     }
 
-
     fun requestBluetoothEnabling(): BluetoothManager {
         if (!this.mBluetoothAdapter.isEnabled) {
             showBluetoothEnableDialog()
@@ -157,6 +156,12 @@ private constructor(
         }
         return this
     }
+
+    fun isLocationGranted(): Boolean =
+        this.mPermissionManager.isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    fun isBluetoothEnabled(): Boolean =
+        this.mBluetoothAdapter.isEnabled
 
     // <-----------------------------INTERNAL CALLS ----------------------------------------------->
     private fun setupBluetoothConfigurations() {
