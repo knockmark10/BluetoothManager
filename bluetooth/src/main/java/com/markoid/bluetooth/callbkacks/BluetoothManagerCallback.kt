@@ -9,6 +9,7 @@ interface BluetoothManagerCallback {
     fun onLocationPermissionAccepted() {}
     fun onLocationPermissionRejected() {}
     fun onScanProgressVisibility(visibility: Int) {}
+    fun onScanFinished() {}
     fun onServiceStateChanged(state: ServiceState) {}
     fun onMessageReceived(message: String) {}
 }

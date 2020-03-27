@@ -212,6 +212,7 @@ private constructor(
      */
     private fun cancelDiscovery() {
         this.mBluetoothAdapter.cancelDiscovery()
+        this.mListener?.onScanFinished()
     }
 
     /**
